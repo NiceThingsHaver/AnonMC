@@ -7,4 +7,4 @@ The chat formatting with each message being attributed a number, with greentext 
 Not yet added:
 Random IDs
 The spoof of names in TAB and nametags
->> replies with the message(s) being mentioned when hovering your mouse on it
+\>\> replies with the message(s) being mentioned when hovering your mouse on it
