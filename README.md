@@ -1,5 +1,4 @@
-Brings the idea of anonymous imageboards to Minecraft.
-Requires ProtocolLib as dependency.
+Brings the idea of being anonymous to Minecraft multiplayer. Requires ProtocolLib as dependency.
 
 # Confirmed working versions :
 - Paper 1.18.2
@@ -9,6 +8,7 @@ Requires ProtocolLib as dependency.
 - The chat formatting with each message being attributed a number, with greentext and everything.
 - /name
 - The spoof of names and UUIDs in TAB and nametags
+- Replacing the chat messages containing the player's actual name with different ones to hide the name.
 
 # Not yet added:
 - Random IDs
