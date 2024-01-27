@@ -1,0 +1,9 @@
+name: AnonMC
+version: '${version}'
+main: eu.caec.anonmc.AnonMC
+api-version: '1.18'
+description: Carries the idea of anonymous imageboards to Minecraft (except there are no images)
+depend: [ProtocolLib]
+commands:
+  name:
+    description: Changes your name

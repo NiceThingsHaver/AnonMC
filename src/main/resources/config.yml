@@ -1,0 +1,4 @@
+spoof-uuids: true
+join-message: '§e%player% has joined the server'
+quit-message: '§e%player% has quit the server'
+death-message: '§4%player% has died'
