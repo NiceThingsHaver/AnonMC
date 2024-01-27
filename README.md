@@ -8,9 +8,11 @@ Brings the idea of being anonymous to Minecraft multiplayer. Requires ProtocolLi
 - The chat formatting with each message being attributed a number, with greentext and everything.
 - /name
 - The spoof of names and UUIDs in TAB and nametags
-- Replacing the chat messages containing the player's actual name with different ones to hide the name.
+- Replacing join, leave, death messages.
 
 # Not yet added:
+- Blocking name tab complete because you can see the actual names with it.
+- Something to not show actual name in achievement messages 
 - Random IDs
 - \>\> replies with the message(s) being mentioned when hovering your mouse on it
 - and more
