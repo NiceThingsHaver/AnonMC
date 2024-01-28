@@ -9,10 +9,10 @@ Brings the idea of being anonymous to Minecraft multiplayer. Requires ProtocolLi
 - /name
 - The spoof of names and ping in TAB and nametags, I haven't found a way to reliably spoof UUIDs without getting others kicked.
 - Replacing join, leave, death messages.
+- Random chat IDs
 
 # Not yet added:
 - Blocking name tab complete because you can see the actual names with it.
 - Something to not show actual name in achievement messages 
-- Random IDs
 - \>\> replies with the message(s) being mentioned when hovering your mouse on it
 - and more
