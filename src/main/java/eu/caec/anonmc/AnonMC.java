@@ -7,23 +7,27 @@ import com.comphenix.protocol.events.ListenerPriority;
 import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
-import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.comphenix.protocol.wrappers.PlayerInfoData;
 import com.comphenix.protocol.wrappers.WrappedChatComponent;
 import com.comphenix.protocol.wrappers.WrappedGameProfile;
+import com.comphenix.protocol.wrappers.WrappedServerPing;
+import org.bukkit.GameRule;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.*;
+import org.bukkit.event.server.ServerListPingEvent;
+import org.bukkit.event.server.ServerLoadEvent;
+import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.logging.Logger;
 
 public final class AnonMC extends JavaPlugin implements Listener {
     int post_no = 0;
@@ -54,33 +58,67 @@ public final class AnonMC extends JavaPlugin implements Listener {
             @Override
             public void onPacketSending(PacketEvent event) {
                 PacketContainer packet = event.getPacket();
-                if /*((packet.getPlayerInfoAction().read(0) == EnumWrappers.PlayerInfoAction.ADD_PLAYER) || (packet.getPlayerInfoAction().read(0) == EnumWrappers.PlayerInfoAction.UPDATE_LATENCY))*/ (true) {
-                    List<PlayerInfoData> list = packet.getPlayerInfoDataLists().read(0);
 
-                    for (int i=0; i < list.size(); i++) {
-                        PlayerInfoData data = list.get(i);
+                List<PlayerInfoData> list = packet.getPlayerInfoDataLists().read(0);
 
-                        if (data == null) {
-                            continue;
-                        }
-
-                        UUID uniqueID = data.getProfile().getUUID();
-
-                        //I wanted to spoof UUIDs but it resulted in other players getting kicked with an error
-                        /*UUID alternativeID = UUID.nameUUIDFromBytes(data.getProfile().getUUID().toString().getBytes());*/
-
-                        list.set(i, new PlayerInfoData(
-                                new WrappedGameProfile(data.getProfile().getUUID(), names_map.get(uniqueID)),
-                                getConfig().getBoolean("spoof-ping") ? ThreadLocalRandom.current().nextInt(1, 149) : data.getLatency(),
-                                data.getGameMode(),
-                                WrappedChatComponent.fromLegacyText(names_map.get(uniqueID))
-                        ));
+                for (int i=0; i < list.size(); i++) {
+                    PlayerInfoData data = list.get(i);
+                    if (data == null) {
+                        continue;
                     }
 
-                    packet.getPlayerInfoDataLists().write(0, list);
+                    UUID uniqueID = data.getProfile().getUUID();
+
+                    list.set(i, new PlayerInfoData(
+                            new WrappedGameProfile(uniqueID, names_map.get(uniqueID)),
+                            getConfig().getBoolean("spoof-ping") ? ThreadLocalRandom.current().nextInt(1, 149) : data.getLatency(),
+                            data.getGameMode(),
+                            WrappedChatComponent.fromLegacyText(names_map.get(uniqueID))
+                    ));
                 }
+
+                packet.getPlayerInfoDataLists().write(0, list);
+
             }
         });
+
+        manager.addPacketListener(new PacketAdapter(this, ListenerPriority.NORMAL, PacketType.Play.Client.TAB_COMPLETE) {
+            @Override
+            public void onPacketReceiving(PacketEvent event) {
+                /*this disables the tab complete entirely kek
+                you will still be able to see the list of commands
+                it won't break the tab complete of vanilla commands because they are client side*/
+                event.setCancelled(true);
+            }
+        });
+
+        manager.addPacketListener(new PacketAdapter(this, ListenerPriority.NORMAL, PacketType.Status.Server.SERVER_INFO) {
+            @Override
+            public void onPacketSending(PacketEvent event) {
+                WrappedServerPing packet = event.getPacket().getServerPings().read(0);
+
+                WrappedGameProfile p1[] = new WrappedGameProfile[packet.getPlayersOnline()];
+                for (short i=0; i<packet.getPlayersOnline(); i++) {
+                    p1[i] = new WrappedGameProfile(UUID.randomUUID(), "Anon" + (i+1));
+                }
+                Iterable<WrappedGameProfile> p2 = Arrays.asList(p1);
+
+                //packet.setPlayersVisible(false);
+                packet.setPlayers(p2);
+            }
+        });
+    }
+
+    @EventHandler
+    public void onLoad(ServerLoadEvent event) {
+        Logger log = getServer().getLogger();
+        List<World> worlds = getServer().getWorlds();
+        for (World wloop : worlds) {
+            if(wloop.getGameRuleValue(GameRule.ANNOUNCE_ADVANCEMENTS)) {
+                wloop.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false);
+                log.info("[AnonMC] Disabling vanilla advancement messages for " + wloop.getName() + " because they are displaying actual player names");
+            }
+        }
     }
 
     @EventHandler
@@ -121,7 +159,6 @@ public final class AnonMC extends JavaPlugin implements Listener {
 
         post_no++;
         e.setCancelled(true);
-        /*String msg = "<§2" + names_map.get(id) + " §fNo." + post_no + " (" + chatID_map.get(id) + ")> ";*/
         String msg = getConfig().getString("chat-format");
         msg = msg.replace("%name%", names_map.get(id));
         msg = msg.replace("%number%", "No." + post_no);
@@ -133,6 +170,15 @@ public final class AnonMC extends JavaPlugin implements Listener {
 
         msg += e.getMessage();
         getServer().broadcastMessage(msg);
+    }
+
+    @EventHandler
+    public void onBookEdit(PlayerEditBookEvent e) {
+        BookMeta newer = e.getNewBookMeta();
+        newer.setAuthor(names_map.get(e.getPlayer().getName()));
+        if (e.isSigning()) {
+            e.setNewBookMeta(newer);
+        }
     }
 
     @Override
