@@ -11,6 +11,7 @@ import com.comphenix.protocol.wrappers.PlayerInfoData;
 import com.comphenix.protocol.wrappers.WrappedChatComponent;
 import com.comphenix.protocol.wrappers.WrappedGameProfile;
 import com.comphenix.protocol.wrappers.WrappedServerPing;
+import org.bukkit.BanList;
 import org.bukkit.GameRule;
 import org.bukkit.World;
 import org.bukkit.command.Command;
@@ -20,7 +21,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
-import org.bukkit.event.server.ServerListPingEvent;
 import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -44,6 +44,36 @@ public final class AnonMC extends JavaPlugin implements Listener {
             id.append(chs.charAt(randomIndex));
         }
         return id.toString();
+    }
+
+    public boolean check_if_id_exists(String id) {
+        for (String i : chatID_map.values()) {
+            if (i.equals(id)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean janny_check(CommandSender sender) {
+        String username = sender.getName();
+        List<String> jannies = this.getConfig().getStringList("jannies");
+        for (String j : jannies) {
+            if (username.equals(j)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean canBeInteger(String s) {
+        for (int i=0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c < '0' || c > '9') {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -125,7 +155,12 @@ public final class AnonMC extends JavaPlugin implements Listener {
     public void onPlayerJoin(PlayerJoinEvent e) {
         if (!names_map.containsKey(e.getPlayer().getUniqueId())) {
             names_map.put(e.getPlayer().getUniqueId(), "Anonymous");
-            chatID_map.put(e.getPlayer().getUniqueId(), generate_chatID());
+            String chatID = generate_chatID();
+            //prevents that two ids are identical
+            while (check_if_id_exists(chatID)) {
+                chatID = generate_chatID();
+            }
+            chatID_map.put(e.getPlayer().getUniqueId(), chatID);
         }
 
         String msg = getConfig().getString("join-message");
@@ -173,7 +208,7 @@ public final class AnonMC extends JavaPlugin implements Listener {
     }
 
     @EventHandler
-    public void onBookEdit(PlayerEditBookEvent e) {
+    public void onBookEdit(PlayerEditBookEvent e) { //this breaks the nbt data if you sign the book, need to fix
         BookMeta newer = e.getNewBookMeta();
         newer.setAuthor(names_map.get(e.getPlayer().getName()));
         if (e.isSigning()) {
@@ -200,6 +235,61 @@ public final class AnonMC extends JavaPlugin implements Listener {
             } else {
                 sender.sendMessage("§cYou cannot run this command from console");
             }
+        }
+
+        if (cmd.getName().equalsIgnoreCase("moderate")) {
+            /*if (sender instanceof Player) {*/
+                if (sender.isOp() || janny_check(sender)) {
+                    if (args.length >= 1) {
+                        switch(args[0]) {
+                            case "list":
+                                String playerlist = "Player list: ";
+                                for (Player p : getServer().getOnlinePlayers()) {
+                                    playerlist = playerlist + p.getName() + " (" + chatID_map.get(p.getUniqueId()) + "), ";
+                                }
+                                sender.sendMessage(playerlist);
+                                break;
+
+                            case "ban":
+                                if (args.length >= 4 && canBeInteger(args[2])) {
+                                    int days = Integer.parseInt(args[2]);
+                                    Player playerToBan = getServer().getPlayer(args[1]);
+
+                                    String banReason = "";
+
+                                    for(int i = 3; i < args.length; i++){
+                                        String arg = args[i] + " ";
+                                        banReason = banReason + arg;
+                                    }
+
+                                    getServer().getBanList(BanList.Type.NAME).addBan(args[1], banReason, new Date(System.currentTimeMillis() + (86400000L * days)), sender.getName());
+
+                                    if (playerToBan != null) {
+                                        getServer().getBanList(BanList.Type.IP).addBan(playerToBan.getAddress().getAddress().getHostAddress(), banReason, new Date(System.currentTimeMillis() + (86400000L * days)), sender.getName());
+                                        playerToBan.kickPlayer("You got banned! ;_; Reconnect for more infos");
+                                    }
+
+                                    sender.sendMessage("§bSucessfully banned player " + args[1] + " for " + args[2] + " days with the following reason: " + banReason);
+                                } else {
+                                    sender.sendMessage("§cIncorrect syntax!");
+                                    sender.sendMessage("§d/moderate ban <realName> <days> <the reason> §b: Ban a player");
+                                }
+                                break;
+
+                            default:
+                                sender.sendMessage("§cType the command without any arguments to see its correct usages");
+                        }
+                    } else {
+                        sender.sendMessage("§dCommand usage:");
+                        sender.sendMessage("§d/moderate list §b: Lists all real usernames with their associated chat IDs");
+                        sender.sendMessage("§d/moderate ban <realName> <days> <the reason> §b: Ban a player");
+                    }
+                } else {
+                    sender.sendMessage("§cThis command is only for operators and jannies");
+                }
+            /*} else {
+                sender.sendMessage("§cYou cannot run this command from console");
+            }*/
         }
         return true;
     }
