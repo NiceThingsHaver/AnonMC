@@ -2,11 +2,12 @@ Brings the idea of being anonymous to Minecraft multiplayer. Requires ProtocolLi
 
 # Confirmed working versions:
 - Paper 1.18.2
-- I believe anything above 1.19.2 would break the spoofing feature.
+- I believe anything above 1.19.2 would break the spoofing feature, therefore there is no point in using this plugin on those versions.
 
 # Features added:
 - The chat formatting with each message being attributed a number, with greentext and everything.
 - /name
+- /moderate, which allows you to see the list of real usernames or ban a player with a custom duration (in days).
 - The spoof of names and ping in TAB and nametags, I haven't found a way to reliably spoof UUIDs without getting others kicked.
 - Replacing join, leave, death messages.
 - Random chat IDs
@@ -15,3 +16,6 @@ Brings the idea of being anonymous to Minecraft multiplayer. Requires ProtocolLi
 
 # Not yet added:
 - \>\> replies with the message(s) being mentioned when hovering your mouse on it
+
+# Half added:
+- Removing names on signed books but when I tried it, it just removed the whole content kek
