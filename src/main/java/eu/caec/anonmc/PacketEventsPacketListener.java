@@ -5,14 +5,10 @@ import com.github.retrooper.packetevents.event.PacketListenerPriority;
 import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
-import com.github.retrooper.packetevents.protocol.player.GameMode;
 import com.github.retrooper.packetevents.protocol.player.User;
 import com.github.retrooper.packetevents.protocol.player.UserProfile;
-import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerInfo;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerInfoUpdate;
 import com.github.retrooper.packetevents.wrapper.status.server.WrapperStatusServerResponse;
-import net.kyori.adventure.text.Component;
-import eu.caec.anonmc.AnonMC;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
@@ -22,7 +18,6 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import static eu.caec.anonmc.AnonMC.names_map;
 import static org.bukkit.Bukkit.getServer;
-import static org.bukkit.plugin.java.JavaPlugin.getPlugin;
 
 public class PacketEventsPacketListener extends PacketListenerAbstract {
     public PacketEventsPacketListener() {
