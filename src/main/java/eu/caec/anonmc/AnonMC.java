@@ -176,12 +176,12 @@ public final class AnonMC extends JavaPlugin implements Listener {
                 if (args.length < 1) {
                     sender.sendMessage("§cPlease input a name");
                 } else {
-                    if (args[0].length() < 17) {
+                    if (args[0].length() < 17 && !(args[0].contains("\""))) {
                         Player p = (Player) sender;
                         names_map.put(p.getUniqueId(), args[0]);
                         sender.sendMessage("§bSuccessfully changed name! Relog for your new name to display outside of chat.");
                     } else {
-                        sender.sendMessage("§cYou cannot set a name longer than 16 characters");
+                        sender.sendMessage("§cYou cannot set a name longer than 16 characters, you cannot use \" either.");
                     }
                 }
             } else {
