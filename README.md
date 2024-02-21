@@ -1,8 +1,7 @@
-Brings the idea of being anonymous to Minecraft multiplayer. Requires ProtocolLib as dependency. <strong>USE IN CRACKED SERVERS, UUIDs ARE NOT SPOOFED BECAUSE IT KICKS OTHER PLAYERS. IF YOU USE ONLINE MODE, PEOPLE CAN RETRIEVE YOUR UUID</strong>
+Brings the idea of being anonymous to Minecraft multiplayer. Requires PacketEvents as dependency. <strong>USE IN CRACKED SERVERS, UUIDs ARE NOT SPOOFED BECAUSE IT KICKS OTHER PLAYERS. IF YOU USE ONLINE MODE, PEOPLE CAN RETRIEVE YOUR UUID</strong>
 
 # Confirmed working versions:
-- Paper 1.18.2
-- I believe anything above 1.19.2 would break the spoofing feature, therefore there is no point in using this plugin on those versions.
+- Paper 1.20.2
 
 # Features added:
 - The chat formatting with each message being attributed a number, with greentext and everything.
