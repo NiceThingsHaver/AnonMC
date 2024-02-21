@@ -1,21 +1,11 @@
 package eu.caec.anonmc;
 
-import com.comphenix.protocol.PacketType;
-import com.comphenix.protocol.ProtocolLibrary;
-import com.comphenix.protocol.ProtocolManager;
-import com.comphenix.protocol.events.ListenerPriority;
-import com.comphenix.protocol.events.PacketAdapter;
-import com.comphenix.protocol.events.PacketContainer;
-import com.comphenix.protocol.events.PacketEvent;
-import com.comphenix.protocol.wrappers.PlayerInfoData;
-import com.comphenix.protocol.wrappers.WrappedChatComponent;
-import com.comphenix.protocol.wrappers.WrappedGameProfile;
-import com.comphenix.protocol.wrappers.WrappedServerPing;
 import org.bukkit.BanList;
 import org.bukkit.GameRule;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -25,16 +15,19 @@ import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.github.retrooper.packetevents.PacketEvents;
+import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
+
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Logger;
 
 public final class AnonMC extends JavaPlugin implements Listener {
+    public static AnonMC instance;
     int post_no = 0;
-    Map<UUID, String> names_map = new HashMap<UUID, String>();
+    public static Map<UUID, String> names_map = new HashMap<UUID, String>();
     Map<UUID, String> chatID_map = new HashMap<UUID, String>();
 
-    public static String generate_chatID() {
+    public String generate_chatID() {
         String chs = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         StringBuilder id = new StringBuilder();
 
@@ -79,64 +72,11 @@ public final class AnonMC extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         saveDefaultConfig();
-
-        ProtocolManager manager = ProtocolLibrary.getProtocolManager();
         getServer().getPluginManager().registerEvents(this, this);
+        instance = this;
 
-        //S2C
-        manager.addPacketListener(new PacketAdapter(this, ListenerPriority.NORMAL, PacketType.Play.Server.PLAYER_INFO) {
-            @Override
-            public void onPacketSending(PacketEvent event) {
-                PacketContainer packet = event.getPacket();
-
-                List<PlayerInfoData> list = packet.getPlayerInfoDataLists().read(0);
-
-                for (int i=0; i < list.size(); i++) {
-                    PlayerInfoData data = list.get(i);
-                    if (data == null) {
-                        continue;
-                    }
-
-                    UUID uniqueID = data.getProfile().getUUID();
-
-                    list.set(i, new PlayerInfoData(
-                            new WrappedGameProfile(uniqueID, names_map.get(uniqueID)),
-                            getConfig().getBoolean("spoof-ping") ? ThreadLocalRandom.current().nextInt(1, 149) : data.getLatency(),
-                            data.getGameMode(),
-                            WrappedChatComponent.fromLegacyText(names_map.get(uniqueID))
-                    ));
-                }
-
-                packet.getPlayerInfoDataLists().write(0, list);
-
-            }
-        });
-
-        manager.addPacketListener(new PacketAdapter(this, ListenerPriority.NORMAL, PacketType.Play.Client.TAB_COMPLETE) {
-            @Override
-            public void onPacketReceiving(PacketEvent event) {
-                /*this disables the tab complete entirely kek
-                you will still be able to see the list of commands
-                it won't break the tab complete of vanilla commands because they are client side*/
-                event.setCancelled(true);
-            }
-        });
-
-        manager.addPacketListener(new PacketAdapter(this, ListenerPriority.NORMAL, PacketType.Status.Server.SERVER_INFO) {
-            @Override
-            public void onPacketSending(PacketEvent event) {
-                WrappedServerPing packet = event.getPacket().getServerPings().read(0);
-
-                WrappedGameProfile p1[] = new WrappedGameProfile[packet.getPlayersOnline()];
-                for (short i=0; i<packet.getPlayersOnline(); i++) {
-                    p1[i] = new WrappedGameProfile(UUID.randomUUID(), "Anon" + (i+1));
-                }
-                Iterable<WrappedGameProfile> p2 = Arrays.asList(p1);
-
-                //packet.setPlayersVisible(false);
-                packet.setPlayers(p2);
-            }
-        });
+        PacketEvents.getAPI().getEventManager().registerListener(new PacketEventsPacketListener());
+        PacketEvents.getAPI().init();
     }
 
     @EventHandler
@@ -149,6 +89,13 @@ public final class AnonMC extends JavaPlugin implements Listener {
                 log.info("[AnonMC] Disabling vanilla advancement messages for " + wloop.getName() + " because they are displaying actual player names");
             }
         }
+
+        PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
+        //Are all listeners read only?
+        PacketEvents.getAPI().getSettings().reEncodeByDefault(true)
+                .checkForUpdates(true)
+                .bStats(false);
+        PacketEvents.getAPI().load();
     }
 
     @EventHandler
@@ -164,27 +111,33 @@ public final class AnonMC extends JavaPlugin implements Listener {
         }
 
         String msg = getConfig().getString("join-message");
-        if (msg != null) {
+        if ( getConfig().getBoolean("enable-join-leave-messages") && msg != null ) {
             msg = msg.replace("%player%", names_map.get(e.getPlayer().getUniqueId()));
             e.setJoinMessage(msg);
+        } else {
+            e.setJoinMessage("");
         }
     }
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent e) {
         String msg = getConfig().getString("quit-message");
-        if (msg != null) {
+        if ( getConfig().getBoolean("enable-join-leave-messages") && msg != null ) {
             msg = msg.replace("%player%", names_map.get(e.getPlayer().getUniqueId()));
             e.setQuitMessage(msg);
+        } else {
+            e.setQuitMessage("");
         }
     }
 
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent e) {
         String msg = getConfig().getString("death-message");
-        if (msg != null) {
+        if ( getConfig().getBoolean("enable-death-messages") && msg != null ) {
             msg = msg.replace("%player%", names_map.get(e.getEntity().getPlayer().getUniqueId()));
             e.setDeathMessage(msg);
+        } else {
+            e.setDeathMessage("");
         }
     }
 
