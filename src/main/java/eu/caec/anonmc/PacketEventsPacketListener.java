@@ -7,6 +7,7 @@ import com.github.retrooper.packetevents.event.PacketSendEvent;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.protocol.player.User;
 import com.github.retrooper.packetevents.protocol.player.UserProfile;
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerInfo;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerInfoUpdate;
 import com.github.retrooper.packetevents.wrapper.status.server.WrapperStatusServerResponse;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -35,21 +36,30 @@ public class PacketEventsPacketListener extends PacketListenerAbstract {
     @Override
     public void onPacketSend(PacketSendEvent event) {
         if (event.getPacketType() == PacketType.Play.Server.PLAYER_INFO_UPDATE) {
-            User user = event.getUser();
-            int actual_latency = getServer().getPlayer(user.getUUID()).getPing();
-
             WrapperPlayServerPlayerInfoUpdate infos = new WrapperPlayServerPlayerInfoUpdate(event);
             List<WrapperPlayServerPlayerInfoUpdate.PlayerInfo> pinfo = infos.getEntries();
 
             for (WrapperPlayServerPlayerInfoUpdate.PlayerInfo info: pinfo) {
-                info.setLatency(
-                    config.getBoolean("spoof-ping") ? ThreadLocalRandom.current().nextInt(1, 149) : actual_latency
-                );
-                info.setGameProfile(new UserProfile(user.getUUID(), names_map.get(user.getUUID())));
+                info.setLatency(config.getBoolean("spoof-ping") ? ThreadLocalRandom.current().nextInt(1, 149) : info.getLatency());
+                info.setGameProfile(new UserProfile(info.getGameProfile().getUUID(), names_map.get( info.getGameProfile().getUUID() ) ));
             }
 
             event.markForReEncode(true);
         }
+
+        //prior to 1.19.3
+        if (event.getPacketType() == PacketType.Play.Server.PLAYER_INFO) {
+            WrapperPlayServerPlayerInfo infos = new WrapperPlayServerPlayerInfo(event);
+            List<WrapperPlayServerPlayerInfo.PlayerData> pinfo = infos.getPlayerDataList();
+
+            for (WrapperPlayServerPlayerInfo.PlayerData info: pinfo) {
+                info.setPing(config.getBoolean("spoof-ping") ? ThreadLocalRandom.current().nextInt(1, 149) : info.getPing());
+                info.setUserProfile(new UserProfile(info.getUserProfile().getUUID(), names_map.get( info.getUserProfile().getUUID() ) ));
+            }
+
+            event.markForReEncode(true);
+        }
+
 
         //there is definitely a better way to do this
         if (event.getPacketType() == PacketType.Status.Server.RESPONSE) {
