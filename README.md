@@ -2,6 +2,7 @@ Brings the idea of being anonymous to Minecraft multiplayer. Requires PacketEven
 
 # Confirmed working versions:
 - Paper 1.20.2
+- Paper 1.18.2
 
 # Features added:
 - The chat formatting with each message being attributed a number, with greentext and everything.
