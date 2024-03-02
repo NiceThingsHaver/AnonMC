@@ -8,3 +8,4 @@ chat-format: '§2%name%§f %number% (%chatid%): '
 jannies:
   - 'ThisNameIsAnExample1'
   - 'ThisNameIsAnExample2'
+chat-cooldown-ms: 5000

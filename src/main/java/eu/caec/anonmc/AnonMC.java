@@ -2,6 +2,7 @@ package eu.caec.anonmc;
 
 import org.bukkit.BanList;
 import org.bukkit.GameRule;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -11,6 +12,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.server.ServerLoadEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -25,6 +27,7 @@ public final class AnonMC extends JavaPlugin implements Listener {
     int post_no = 0;
     public static Map<UUID, String> names_map = new HashMap<UUID, String>();
     Map<UUID, String> chatID_map = new HashMap<UUID, String>();
+    Map<UUID, Long> cooldown_map = new HashMap<UUID, Long>();
 
     public String generate_chatID() {
         String chs = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -107,6 +110,7 @@ public final class AnonMC extends JavaPlugin implements Listener {
                 chatID = generate_chatID();
             }
             chatID_map.put(e.getPlayer().getUniqueId(), chatID);
+            cooldown_map.put(e.getPlayer().getUniqueId(), System.currentTimeMillis());
         }
 
         String msg = getConfig().getString("join-message");
@@ -142,29 +146,39 @@ public final class AnonMC extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onChatMessage(AsyncPlayerChatEvent e) {
-        UUID id = e.getPlayer().getUniqueId();;
+        UUID id = e.getPlayer().getUniqueId();
+        int cooldown = getConfig().getInt("chat-cooldown-ms");
 
-        post_no++;
         e.setCancelled(true);
-        String msg = getConfig().getString("chat-format");
-        msg = msg.replace("%name%", names_map.get(id));
-        msg = msg.replace("%number%", "No." + post_no);
-        msg = msg.replace("%chatid%", chatID_map.get(id));
+        if (System.currentTimeMillis() - cooldown_map.get(id) < cooldown) {
+            e.getPlayer().sendMessage("§cThere is a cooldown of " + cooldown + "ms between each messages.");
+        } else {
+            post_no++;
+            String msg = getConfig().getString("chat-format");
+            msg = msg.replace("%name%", names_map.get(id));
+            msg = msg.replace("%number%", "No." + post_no);
+            msg = msg.replace("%chatid%", chatID_map.get(id));
 
-        if (e.getMessage().charAt(0) == '>') {
-            msg += "§a";
+            if (e.getMessage().charAt(0) == '>') {
+                msg += "§a";
+            }
+
+            msg += e.getMessage();
+
+            for (int i = post_no; i > post_no - 40; i--) {
+                //double blue color code to prevent it from checking individual numbers in the reply
+                msg = msg.replace(">>" + i, "§3>>§3" + i + "§f");
+            }
+
+            getServer().broadcastMessage(msg);
+            cooldown_map.put(id, System.currentTimeMillis());
         }
-
-        msg += e.getMessage();
-        getServer().broadcastMessage(msg);
     }
 
     @EventHandler
-    public void onBookEdit(PlayerEditBookEvent e) { //this breaks the nbt data if you sign the book, need to fix
-        BookMeta newer = e.getNewBookMeta();
-        newer.setAuthor(names_map.get(e.getPlayer().getName()));
+    public void onBookEdit(PlayerEditBookEvent e) {
         if (e.isSigning()) {
-            e.setNewBookMeta(newer);
+            e.getPlayer().sendMessage("§6NOTE: Your real username is displayed as the author of the books you sign.");
         }
     }
 
@@ -190,7 +204,6 @@ public final class AnonMC extends JavaPlugin implements Listener {
         }
 
         if (cmd.getName().equalsIgnoreCase("moderate")) {
-            /*if (sender instanceof Player) {*/
                 if (sender.isOp() || janny_check(sender)) {
                     if (args.length >= 1) {
                         switch(args[0]) {
@@ -239,9 +252,6 @@ public final class AnonMC extends JavaPlugin implements Listener {
                 } else {
                     sender.sendMessage("§cThis command is only for operators and jannies");
                 }
-            /*} else {
-                sender.sendMessage("§cYou cannot run this command from console");
-            }*/
         }
         return true;
     }

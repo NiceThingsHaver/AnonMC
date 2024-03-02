@@ -1,6 +1,6 @@
 name: AnonMC
 version: '${version}'
-author: s4s
+author: Anon
 main: eu.caec.anonmc.AnonMC
 api-version: '1.20'
 description: Carries the idea of anonymous imageboards to Minecraft (except there are no images)
