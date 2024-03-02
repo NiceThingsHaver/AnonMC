@@ -14,3 +14,4 @@ Brings the idea of being anonymous to Minecraft multiplayer. Requires PacketEven
 - Blocking tab complete because you can see the actual names with it (you can still be able to see commands and vanilla commands are not affected because the completion is client-side).
 - \>\> replies being colored blue
 - Warning about signing books which show your real username as book author.
+- Chat cooldown
