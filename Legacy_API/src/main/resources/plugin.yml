@@ -1,0 +1,10 @@
+name: AnonMCLegacy
+version: 1.2.1
+main: eu.caec.anonmc.AnonMC
+depend:
+  - packetevents
+commands:
+  name:
+    description: Changes your name
+  moderate:
+    description: Moderation tools, only available to operators and jannies

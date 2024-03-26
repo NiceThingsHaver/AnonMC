@@ -1,0 +1,11 @@
+spoof-ping: true
+enable-join-leave-messages: true
+enable-death-messages: true
+join-message: '&e%player% has joined the server'
+quit-message: '&e%player% has quit the server'
+death-message: '&4%player% has died'
+chat-format: '&2%name%&f %number% (%chatid%): '
+jannies:
+  - 'ThisNameIsAnExample1'
+  - 'ThisNameIsAnExample2'
+chat-cooldown-ms: 5000
