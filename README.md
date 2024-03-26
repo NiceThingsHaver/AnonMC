@@ -1,8 +1,8 @@
 Brings the idea of being anonymous to Minecraft multiplayer. Requires PacketEvents as dependency. <strong>USE IN CRACKED SERVERS, UUIDs ARE NOT SPOOFED IN-GAME. IF YOU USE ONLINE MODE, PEOPLE CAN RETRIEVE YOUR REAL UUID</strong>
 
 # Confirmed working versions:
-<strong>Modern</strong> : Paper 1.20.2, Paper 1.18.2
-<strong>Legacy</strong> : PaperSpigot 1.8.8, Paper 1.12.2
+- <strong>Modern</strong> : Paper 1.20.2, Paper 1.18.2
+- <strong>Legacy</strong> : PaperSpigot 1.8.8, Paper 1.12.2
 
 # Features added:
 - The chat formatting with each message being attributed a number, with greentext and everything.
