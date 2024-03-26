@@ -99,8 +99,6 @@ public class PacketEventsPacketListener extends PacketListenerAbstract {
                     "    \"previewsChat\": true\n" +
                     "}";
 
-            getServer().broadcastMessage(json);
-
             response.setComponentJson(json);
             event.markForReEncode(true);
         }
